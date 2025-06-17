@@ -63,9 +63,17 @@ function generate_initial_queue() {
       for (let k=0; k<7; k++) {
         for (let l=0; l<7; l++) {
           for (let m=0; m<7; m++) {
-            //appending the state to the queue
+            
+            for (let n=0; n<7; n++) {
+                //appending the state to the queue
+                state=i.toString() + j.toString() + k.toString() + l.toString() + m.toString()+ n.toString();
+                queue.push(state);
+            }
+            /*
             state=i.toString() + j.toString() + k.toString() + l.toString() + m.toString();
             queue.push(state);
+            */
+            
           }
         }
       }
@@ -78,12 +86,16 @@ function generate_initial_queue() {
 }
 
 
-
-let column=minimax('031314052', 5, initialQueue);
+const Time=Date.now();
+let column=minimax('3', 6, initialQueue);
 console.log('Column to select:', column)
+console.log('Time taken to calculate minimax:', Date.now()-Time, 'ms');
 
 function minimax(state, depth, queue) {
-    if(queue.length===16807) {
+
+
+
+    if(depth===6) {
         
 
         let scores=[];
@@ -94,11 +106,15 @@ function minimax(state, depth, queue) {
         
     }
 
+
     let newQueue=[]; //new queue to be returned
     let score=0;
-    for (let i=0; i<(queue.length/7); i=i+7) {
-        window=[queue[i], queue[i+1], queue[i+2], queue[i+3], queue[i+4], queue[i+5], queue[i+6]];
+    let count=0;
 
+
+    for (let i=0; i<(queue.length); i=i+7) {
+        window=[queue[i], queue[i+1], queue[i+2], queue[i+3], queue[i+4], queue[i+5], queue[i+6]];
+        count++;
         //check if the current depth allows the player to choose a column
 
 
@@ -116,15 +132,15 @@ function minimax(state, depth, queue) {
         //appending the score to the new queue
         newQueue.push(score);
     }
-    if(newQueue.length!=7) {
 
 
+    if(depth!=2) {
         return minimax(null, depth-1, newQueue);
     }
     else {
 
         //find the column with the maximum score
-
+        console.log('New queue:', newQueue);
         return newQueue.indexOf(Math.max(...newQueue)); //return the index of the maximum score
     }
 }
@@ -278,10 +294,12 @@ function get_score(state) {
 
 }
 
+/*
 const time=Date.now();
 let score=get_score('343')
 console.log('Final score:', score);
 console.log('Time taken to calculate score:', Date.now()-time, 'ms');
+*/
 
 
 
