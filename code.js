@@ -79,7 +79,7 @@ function generate_initial_queue() {
 
 
 
-let column=minimax('0', 5, initialQueue);
+let column=minimax('031314052', 5, initialQueue);
 console.log('Column to select:', column)
 
 function minimax(state, depth, queue) {
@@ -88,7 +88,7 @@ function minimax(state, depth, queue) {
 
         let scores=[];
         for (let index=0; index<queue.length; index++) {
-            scores.push(get_score(queue[index]));
+            scores.push(get_score(state+queue[index]));
         }
         queue=scores;
         
@@ -117,11 +117,14 @@ function minimax(state, depth, queue) {
         newQueue.push(score);
     }
     if(newQueue.length!=7) {
+
+
         return minimax(null, depth-1, newQueue);
     }
     else {
 
         //find the column with the maximum score
+
         return newQueue.indexOf(Math.max(...newQueue)); //return the index of the maximum score
     }
 }
@@ -335,9 +338,9 @@ function evaluate_score_based_on_window(board, window) {
         //begin applying scoring heuristics
         
         if (xCount===4) {score+=1000000;} //4 in a row for the computer
-        else if (oCount===4) {score+=-1000000;} //4 in a row for the player
+        else if (oCount===4) {score+=-2000000;} //4 in a row for the player
         else if (xCount===3) {score+=100;} //3 in a row for the computer
-        else if (oCount===3) {score+=-80;} //3 in a row for the player
+        else if (oCount===3) {score+=-300;} //3 in a row for the player
         else if (xCount===2) {score+=10;} //2 in a row for the computer
         else if (oCount===2) {score+=-5;} //2 in a row for the player
     }
@@ -392,8 +395,8 @@ function convert_state_to_matrix(state) {
         //checking if the column is full
         for (let column=5; column>=0; column--) {
             if(board[column][row]===0) {
-                if(turn%2===0) {board[column][row]='x';}
-                else {board[column][row]='o';}
+                if(turn%2===0) {board[column][row]='o';}
+                else {board[column][row]='x';}
                 turn++;
                 break;
             }
