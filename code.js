@@ -6,7 +6,7 @@
 
 
 
-The player will always start first
+The computer will always start first
 The computer will use the minimax algorithm along with alpha-beta pruning to find the best move
 
 
@@ -25,18 +25,6 @@ Connect 4 board
 
 
 
-class tree {
-    constructor(state) {
-        this.state = state;
-        this.value=null;
-        this.children = [];
-        
-    }
-}
-
-
-
-
 
 
 
@@ -44,7 +32,7 @@ class tree {
 
 
 /*
-First move: '00000' or '10000' or '20000' or '30000' or '40000' or '50000' or '60000'
+First move: '000000' or '100000' or '200000' or '300000' or '400000' or '500000' or '600000'
 
 
 */
@@ -85,25 +73,33 @@ function generate_initial_queue() {
   return queue;
 }
 
+var boardPosition='';
 
 const Time=Date.now();
-let column=minimax('3', 6, initialQueue);
+let column=minimax(boardPosition, 6, initialQueue);
 console.log('Column to select:', column)
 console.log('Time taken to calculate minimax:', Date.now()-Time, 'ms');
 
 function minimax(state, depth, queue) {
 
-
-
     if(depth===6) {
-        
-
+        let t=Date.now();
         let scores=[];
         for (let index=0; index<queue.length; index++) {
-            scores.push(get_score(state+queue[index]));
+
+            //if the move is illegal, then the recent position in the move should be reveresed until the move is valid
+            // this is to ensure that the minimax algorithm does not consider illegal moves
+
+            let position=state+queue[index];
+            while (check_state_validity(position)===false) {
+                //removing the last move in position
+                position=position.slice(0,position.length-1);
+            }
+           
+            scores.push(get_score(position));
         }
         queue=scores;
-        
+        console.log('Time taken to calculate scores:', Date.now()-t, 'ms');
     }
 
 
@@ -111,76 +107,64 @@ function minimax(state, depth, queue) {
     let score=0;
     let count=0;
 
-
     for (let i=0; i<(queue.length); i=i+7) {
         window=[queue[i], queue[i+1], queue[i+2], queue[i+3], queue[i+4], queue[i+5], queue[i+6]];
         count++;
         //check if the current depth allows the player to choose a column
 
 
-        //minimzing player chooses a column if depth is even
-        if (depth%2===0) {
+        //minimzing player chooses a column if depth is odd
+        if (depth%2!==0) {
             //choosing the minimum score from the current window
             score=Math.min(...window);
         }
-        //maximizing player chooses a column if depth is odd
-        else {
-            //maximizing player chooses a column if depth is odd
-            score=Math.max(...window);
 
-        }
+        //maximizing player chooses a column if depth is even
+        else {score=Math.max(...window);}
+
         //appending the score to the new queue
         newQueue.push(score);
     }
 
-
+    if (depth===3) {console.log(queue[0], queue[queue.length-1]);}
     if(depth!=2) {
-        return minimax(null, depth-1, newQueue);
+        return minimax(state, depth-1, newQueue);
     }
     else {
 
         //find the column with the maximum score
-        console.log('New queue:', newQueue);
-        return newQueue.indexOf(Math.max(...newQueue)); //return the index of the maximum score
-    }
-}
+        
+        
+        //find index of valid max score
+        //this is to ensure that the column is valid i.e. not full
+        let valid=false;
+        while (valid===false) {
+            console.log('New queue:', newQueue);
+            let maxScoreIndex=newQueue.indexOf(Math.max(...newQueue));
 
-
-
-
-
-
-//initializing tree
-//startingPosition='0';
-//const rootNode=minimax(0, 2, startingPosition);
-
-//const start=Date.now();
-//BFS(rootNode);
-//console.log('Time taken to generate tree:', Date.now()-start, 'ms');
-
-
-
-
-
-
-
-
-
-//recursively building the tree
-/*
-function minimax(currentLevel, maxLevel, state) {
-    const node=new tree(state)
-
-    if(currentLevel<maxLevel) {
-        for (let i=0; i<7; i++) {
-            //console.log('Current state:', state+i);
-            const child=minimax(currentLevel+1, maxLevel, state + i);
-            node.children.push(child);
+            //check if the column is valid
+            if (convert_state_to_matrix(state)[0][maxScoreIndex]===0) {
+                
+                return maxScoreIndex; //return the column index
+            }
+            else {
+                //remove the max score from the queue
+                newQueue[maxScoreIndex]=Number.NEGATIVE_INFINITY; //set it to negative infinity so that it is not considered in the next iteration
+            }
         }
+    
     }
-    return node;
 }
-*/
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -203,25 +187,6 @@ function get_score(state) {
     let finalScore=0; //final score to be returned
 
 
-    //generating scoring windows in each direction
-
-    //index of last move i.e. the last element in the state
-    //let lastMove=parseInt(state[state.length-1]);
-
-    //let indexes=[]; //in the form of [row, column]
-
-    //finding the row of the last move
-    /*
-    for (let row=0; row<6; row++) {
-        if(board[row][lastMove]!==0) {
-            indexes.push(row);
-            break;
-        }
-    }
-    indexes.push(lastMove);
-    */
-
-
     //generating scoring list in each direction
 
     //horizontal windows
@@ -235,7 +200,7 @@ function get_score(state) {
                         [row, column+3]];
 
             //evaluating score based on the current window
-            finalScore+=evaluate_score_based_on_window(board, window);
+            finalScore+=evaluate_score_based_on_window(board, window, state);
         }
     }
     
@@ -251,7 +216,7 @@ function get_score(state) {
                         [row+3, column]];
 
             //evaluating score based on the current window
-            finalScore+=evaluate_score_based_on_window(board, window);
+            finalScore+=evaluate_score_based_on_window(board, window, state);
         }
     }
 
@@ -267,7 +232,7 @@ function get_score(state) {
                         [row+3, column+3]];
 
             //evaluating score based on the current window
-            finalScore+=evaluate_score_based_on_window(board, window);
+            finalScore+=evaluate_score_based_on_window(board, window, state);
         }
     }
 
@@ -285,21 +250,30 @@ function get_score(state) {
             count++;
 
             //evaluating score based on the current window
-            finalScore+=evaluate_score_based_on_window(board, window);
+            finalScore+=evaluate_score_based_on_window(board, window, state);
         }
     }
+
+
+
+    //count cells in the centre column
+    let centreColumnCount=0;
+    for (let row=0; row<6; row++) {
+        if (board[row][3]==='x') {centreColumnCount++;}
+    }
+
+
+    //applying scoring heuristic for centre column
+    let centerColumnWeightage=dynamic_scoring(state)[0];
+    finalScore+=(centreColumnCount*centerColumnWeightage); //centre column weightage is multiplied by the number of pieces in the centre column
+
 
     //returning final score
     return finalScore;
 
 }
 
-/*
-const time=Date.now();
-let score=get_score('343')
-console.log('Final score:', score);
-console.log('Time taken to calculate score:', Date.now()-time, 'ms');
-*/
+
 
 
 
@@ -318,11 +292,26 @@ Future changes:
 */
 
 
-function evaluate_score_based_on_window(board, window) {
+function evaluate_score_based_on_window(board, window, state) {
+
+
+    //retrieving scoring dynamic heuristics
+    scoringHeuristic=dynamic_scoring(state); //dynamic scoring based on the current window
+    let xWinWeightage=scoringHeuristic[1];
+    let x3InARowWeightage=scoringHeuristic[2];
+    let x2InARowWeightage=scoringHeuristic[3];
+
+    let oWinWeightage=scoringHeuristic[4];
+    let o3InARowWeightage=scoringHeuristic[5];
+    let o2InARowWeightage=scoringHeuristic[6];
+
+
+
 
     let score=0;
 
     //checking if window is filled with '0's, and if it it, return 0
+    
     let zeroCount=0;
     for (let cell of window) {
         let row=cell[0];
@@ -331,6 +320,7 @@ function evaluate_score_based_on_window(board, window) {
         if(board[row][column]===0) {zeroCount++;}
     }
     if (zeroCount===4) {return 0;} //if the window is empty, return 0
+    
     
 
 
@@ -355,13 +345,14 @@ function evaluate_score_based_on_window(board, window) {
         //pure window
         //begin applying scoring heuristics
         
-        if (xCount===4) {score+=1000000;} //4 in a row for the computer
-        else if (oCount===4) {score+=-2000000;} //4 in a row for the player
-        else if (xCount===3) {score+=100;} //3 in a row for the computer
-        else if (oCount===3) {score+=-300;} //3 in a row for the player
-        else if (xCount===2) {score+=10;} //2 in a row for the computer
-        else if (oCount===2) {score+=-5;} //2 in a row for the player
+        if (xCount===4) {score+=xWinWeightage;} //4 in a row for the computer
+        else if (oCount===4) {score+=oWinWeightage;} //4 in a row for the player
+        else if (xCount===3) {score+=x3InARowWeightage;} //3 in a row for the computer
+        else if (oCount===3) {score+=o3InARowWeightage;} //3 in a row for the player
+        else if (xCount===2) {score+=x2InARowWeightage;} //2 in a row for the computer
+        else if (oCount===2) {score+=o2InARowWeightage;} //2 in a row for the player
     }
+
 
     //console.log(score);
     return score;
@@ -372,22 +363,7 @@ function evaluate_score_based_on_window(board, window) {
 
 
 
-//breadth first search
-function BFS(root) {
-    const queue=[root];
 
-    while (queue.length>0) {
-        const currentNode=queue.shift(); //removing from the front of the queue
-        convert_state_to_matrix(currentNode.state);
-        //console.log(currentNode.state);
-
-        //add all children of current node to queue
-        for (let child of currentNode.children) {
-            queue.push(child);
-        }
-
-    }
-}
 
 
 //convert state into matrix
@@ -404,29 +380,105 @@ function convert_state_to_matrix(state) {
     ];
 
     //state: 01
-    //we will assume that it is the player's turn when turn is divisible by 2
+    //we will assume that it is the computer's turn when turn is divisible by 2
     let turn=0;
 
     for (let i of state) {
-        let row=parseInt(i);
+        let column=parseInt(i);
 
         //checking if the column is full
-        for (let column=5; column>=0; column--) {
-            if(board[column][row]===0) {
-                if(turn%2===0) {board[column][row]='o';}
-                else {board[column][row]='x';}
+        for (let row=5; row>=0; row--) {
+            if(board[row][column]===0) {
+                if(turn%2!==0) {board[row][column]='o';}
+                else {board[row][column]='x';}
                 turn++;
                 break;
             }
         }
     }
     
-    /*
-    for (let row of board) {console.log(row);}
-    console.log('------------------');
-    console.log('------------------');
-    console.log('------------------');
-    */
+ 
    return board;
     
 }
+
+
+
+//this function checks if there are any illegal moves in the current state i.e. if there are any columns that are full
+function check_state_validity(state) {
+
+    //frequency of column selection will be counted, and if it exceeds 6, then the state is invalid
+    for (let i=0; i<7; i++) {
+        let targetChar=i.toString();
+        let count=[...state].filter(char => char===targetChar).length;
+        if (count>6) {
+            return false; //invalid state
+        }
+    }
+    return true; //valid state
+}
+
+
+
+
+//this function will be used to dynamically alter scores based on the current board state
+// it will be used to adjust the scoring heuristics based on the current board state
+
+function dynamic_scoring(state) {
+     
+    //the '6' in the calculation is the number of moves ahead that the algorithm will consider 
+    // this value may change based on the depth of the minimax algorithm
+    let depth=6; //this is the depth of the minimax algorithm
+
+    let centerColumnWeightage;
+    let computerWinWeightage;
+    let computer3InARowWeightage;
+    let computer2InARowWeightage;
+    let playerWinWeightage;
+    let player3InARowWeightage;
+    let player2InARowWeightage;
+
+    
+    if(boardPosition.length<=(5)) {
+        //console.log(1);
+        centerColumnWeightage=100;
+
+        computerWinWeightage=1000000;
+        computer3InARowWeightage=100;
+        computer2InARowWeightage=10;
+
+        playerWinWeightage=-2000000;
+        player3InARowWeightage=-300;
+        player2InARowWeightage=-3;
+    }
+    else if (boardPosition.length<=(57)) {
+        //console.log(2);
+        centerColumnWeightage=10;
+
+        computerWinWeightage=1000000;
+        computer3InARowWeightage=100;
+        computer2InARowWeightage=50;
+
+        playerWinWeightage=-2000000;
+        player3InARowWeightage=-200;
+        player2InARowWeightage=-20;
+    }
+    else {
+        //console.log(3);
+        centerColumnWeightage=5;
+
+        computerWinWeightage=1000000;
+        computer3InARowWeightage=100;
+        computer2InARowWeightage=10;
+
+        playerWinWeightage=-2000000;
+        player3InARowWeightage=-300;
+        player2InARowWeightage=-100;
+    }
+    return [centerColumnWeightage, computerWinWeightage, computer3InARowWeightage, computer2InARowWeightage, playerWinWeightage, player3InARowWeightage, player2InARowWeightage];
+}
+
+
+
+
+
