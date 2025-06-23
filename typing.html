@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+
+<div id="inputField" contenteditable="true" style="width: 200px; height: 40px;"></div>
+
+<script>
+    window.actualMessage='Hello world';
+
+
+    function checkInput() {
+        let words=document.getElementById('inputField').innerHTML;
+        console.log(words);
+        
+        
+        //check each letter in input
+        let newMsg='';
+        for (let i=0; i<words.length; i++) {
+            if (words[i]!==actualMessage[i]) {
+                newMsg='<div style="color: red">'+words[i]+'</div>';
+            }
+            else {
+                newMsg+=words[i];
+            }
+        }
+
+        document.getElementById('inputField').innerHTML=newMsg;
+    }
+
+
+
+    //detect backspace
+    inputField.addEventListener("keydown", (event) => {
+    if (event.key === "Backspace") {
+      console.log("Backspace key pressed");
+      
+    }
+    else {
+        checkInput();
+    }
+  });
+    
+</script>
+
+</body>
+</html>
